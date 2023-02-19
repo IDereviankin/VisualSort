@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <concepts>
+#include <cstddef>
 #include <iostream>
 #include <vector>
 
@@ -10,6 +10,7 @@
 #define COLUMN_WIDTH 2
 #define COLUMNS_COUNT (WINDOW_WIDTH / COLUMN_WIDTH)
 #define HEIGHT_UNIT (WINDOW_HEIGHT / COLUMNS_COUNT)
+#define WAIT_TIME 20
 
 #define RED(_X) ((_X & 0xFF000000) >> 24)
 #define GREEN(_X) ((_X & 0x00FF0000) >> 16)
@@ -44,6 +45,48 @@ std::vector<Swap> bubble_sort(uint32_t (&unsorted)[COLUMNS_COUNT])
     }
 
     return swaps;
+};
+
+std::vector<Swap> _quick_sort(uint32_t (&unsorted)[COLUMNS_COUNT], size_t lo, size_t hi)
+{
+    uint32_t arr[COLUMNS_COUNT]{};
+    std::vector<Swap> swaps{};
+
+    std::copy(unsorted, unsorted + COLUMNS_COUNT, arr);
+    auto swap = [&](size_t i, size_t j)
+    {
+        swaps.push_back({i, j});
+
+        auto t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+    };
+
+    if(lo >= hi || lo < 0) return swaps;
+
+    auto pivot = arr[hi];
+    auto i = lo - 1;
+
+    for(auto j = lo; j < hi; ++j) {
+        if(arr[j] <= pivot) {
+            i += 1;
+            swap(i, j);
+        }
+    }
+
+    i += 1;
+    swap(i, hi);
+
+    auto swaps1 = _quick_sort(arr, lo, i - 1);
+    auto swaps2 = _quick_sort(arr, i + 1, hi);
+    swaps.insert(swaps.end(), swaps1.begin(), swaps1.end());
+    swaps.insert(swaps.end(), swaps2.begin(), swaps2.end());
+    
+    return swaps;
+};
+
+std::vector<Swap> quick_sort(uint32_t (&unsorted)[COLUMNS_COUNT]) {
+    return _quick_sort(unsorted, 0, COLUMNS_COUNT - 1);
 };
 
 struct VisualSortApp
@@ -114,7 +157,7 @@ public:
 
             updateScreen();
 
-            SDL_WaitEventTimeout(&ev, 1);
+            SDL_WaitEventTimeout(&ev, WAIT_TIME);
             switch (ev.type)
             {
             case SDL_QUIT:
@@ -164,6 +207,6 @@ public:
 int main()
 {
     // std::function f = bubble_sort;
-    VisualSortApp app{SortAlgorithm(bubble_sort)};
+    VisualSortApp app{SortAlgorithm(quick_sort)};
     app.startMainloop();
 }
