@@ -1,6 +1,4 @@
 #include <algorithm>
-#include <cstddef>
-#include <iostream>
 #include <vector>
 
 #include <SDL2/SDL.h>
